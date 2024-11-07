@@ -6,13 +6,15 @@
 ]
 (
 )
-jonas
+jonas""
 __jonas
 1
-1.1
+1.1'\n'
+'d'
+'c'
 '\0'
 /
-// JAAAAAAAAAAAA
+//jjaaa
 " jonas"
 <
 >
