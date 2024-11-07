@@ -22,6 +22,7 @@ TOKEN AnalisadorLexico(FILE *fd) {
     int tamD = 0;
     char lexema[TAM_LEXEMA] = "";
     char digitos[TAM_NUM] = "";
+    
 
 
     while (1) {
@@ -31,6 +32,7 @@ TOKEN AnalisadorLexico(FILE *fd) {
             case 0:  // Estado inicial
                 if (c == ' '  ||c == '\t' || c == '\n') {
                     estado = 0;  // Ignora espaços e tabulações
+                    contLinha++;
                 }
                 else if (c == '_' ){
                  estado = 1;
@@ -223,16 +225,37 @@ TOKEN AnalisadorLexico(FILE *fd) {
                 }
                 else if (c == '\\') {
                     estado = 9;
-                    lexema[tamL]=c;
-                    lexema[++tamL]='\0';
+                }
+                else if(c == '\''){
+                    estado = 11;
+                    tk.cat = CT_C;
+                    tk.c = lexema[0];
+                    return tk;
                 }
                 break;
 
                 case 9:
-                if (c == 'n'|| c == '0'){
-                    estado = 10;
-                    lexema[tamL]=c;
-                    lexema[++tamL]='\0';
+                if (c == 'n'){
+                    estado = 44;
+                    tk.cat = CT_C;
+                    tk.c = '\n';
+                }
+                else if (c == '0'){
+                    estado = 41;
+                    tk.cat = CT_C;
+                    tk.c = '\0';
+                }
+                break;
+                case 44:
+                if(c == '\''){
+                    estado = 45;
+                    return tk;
+                }
+                break;
+                case 41:
+                if(c == '\''){
+                    estado = 42;
+                    return tk;
                 }
                 break;
 
@@ -290,19 +313,12 @@ TOKEN AnalisadorLexico(FILE *fd) {
                 break;
 
                 case 16:
-                tamL = 0; 
-                c = fgetc(fd);
-
-                // Continue lendo caracteres até encontrar uma nova linha ou o fim do arquivo
-                while (c != '\n' && c != EOF) {
-                    lexema[tamL++] = c;  
-                    c = fgetc(fd);
-                }
-                lexema[tamL] = '\0';
                 tk.cat = COMENTARIO;
-                strcpy(tk.lexema, lexema);
+                while ((c = fgetc(fd)) != '\n' && c != EOF) {
+                // Ignora todos os caracteres até o final da linha ou EOF
+                }
+                ungetc('\n', fd);  // Coloca a nova linha de volta no fluxo para sinalizar fim da expressão, se necessário
                 return tk;
-                break;
                 
                 case 23:
                 if (c == '='){
@@ -394,6 +410,7 @@ TOKEN AnalisadorLexico(FILE *fd) {
     }
     while (true){
         token = AnalisadorLexico(fd);
+        printf("<Linha %d", contLinha);
         switch (token.cat) {
 
             case SN: switch (token.codigo) {
@@ -605,13 +622,21 @@ TOKEN AnalisadorLexico(FILE *fd) {
                 printf("<CT_R, %f>\n", token.valorReal);
                 break;
             case CT_C:
-                printf("<CT_C, %c> \n", token.c);
+                if (token.c == '\n') {
+                    printf("<CT_C, \\n> \n");
+                } 
+                else if (token.c == '\0') {
+                    printf("<CT_C, \\0> \n");
+                } 
+                else {
+                    printf("<CT_C, %c> \n", token.c);
+                }
                 break;
             case LT:
                 printf("<LT, %s> \n", token.lexema);
                 break;
             case COMENTARIO:
-                printf("<CMT, %s>\n", token.lexema);
+                printf("<CMT, COMENTARIO>\n");
                 break;
             case FIM_ARQ: 
                 printf(" <Fim do arquivo encontrado>\n");
