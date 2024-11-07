@@ -313,12 +313,12 @@ TOKEN AnalisadorLexico(FILE *fd) {
                 break;
 
                 case 16:
-                tk.cat = COMENTARIO;
+                
                 while ((c = fgetc(fd)) != '\n' && c != EOF) {
                 // Ignora todos os caracteres até o final da linha ou EOF
                 }
                 ungetc('\n', fd);  // Coloca a nova linha de volta no fluxo para sinalizar fim da expressão, se necessário
-                return tk;
+                
                 
                 case 23:
                 if (c == '='){
